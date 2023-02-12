@@ -3,7 +3,9 @@ Maze 42 is a 3 dimensional maze generator.
 It was build to be able to generate "blueprints" for building a maze in Valheim.
 
 It will generate images like this:
-<img width="274" alt="image" src="https://user-images.githubusercontent.com/20858590/218341481-109c183a-730c-4c4a-b71a-97768bd45388.png">
+
+<img width="265" alt="image" src="https://user-images.githubusercontent.com/20858590/218342164-81061af6-b389-4a09-96ed-deda573bd399.png"><img width="263" alt="image" src="https://user-images.githubusercontent.com/20858590/218342170-fcda5cdb-d504-41de-9c73-81cce2200ba4.png">
+
 
 For now it is a c# linqpad script. If i get around to it, I might convert it into a proper tool later on.
 Download Linqpad to run it: https://www.linqpad.net/ 
