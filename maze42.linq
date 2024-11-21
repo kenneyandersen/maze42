@@ -7,8 +7,8 @@
 void Main()
 {
 	var start = new Coord(0, 0, 0);
-	var end = new Coord(9, 9, 0); // husk at coordinater er 0-akselængde-1
-	var size = new Size(10, 10, 10);
+	var end = new Coord(9, 9, 1); // husk at coordinater er 0-akselængde-1
+	var size = new Size(10, 10, 2);
 	var preventMultiLevelStairs = true;
 	
 	var maze = new MazeGenerator(size, preventMultiLevelStairs: preventMultiLevelStairs).GenerateMaze(start, end);
@@ -16,9 +16,11 @@ void Main()
 		"Did not reach end".Dump();
 	} 
 	var viz = new MazeViz();
-	
+
 	var vizpng = new GraphPngViz(maze);
-	vizpng.Viz(new DirectoryInfo(@"c:\map"), "map");
+	var folder = new DirectoryInfo($@"c:\map\map_{DateTime.Now:yyyyMMdd-HHmmss}");
+	vizpng.Viz(folder, "map", drawExit: false);
+	vizpng.Viz(folder, "solution", drawExit: true);
 }
 
 class MazeGenerator
@@ -380,7 +382,7 @@ class GraphPngViz
 		l = new GraphVizLayoutParams();
 	}
 
-	public void Viz(DirectoryInfo dir, string filebase)
+	public void Viz(DirectoryInfo dir, string filebase, bool drawExit)
 	{
 		dir.Create();
 		var width = l.WallLength * (maze.Size.width + 2);
@@ -389,21 +391,21 @@ class GraphPngViz
 		{
 			var bmp = new Bitmap(width, height);
 			var vertices = maze.Vertices.Values.Where(w => w.Coord.z == depth).ToList();
-			DrawMap(vertices, bmp, depth);
+			DrawMap(vertices, bmp, depth, drawExit);
 			bmp.Dump();
 			bmp.Save(Path.Combine(dir.FullName, $"{filebase}_{depth}.png"), ImageFormat.Png);
 		}
 	}
 
-	private void DrawMap(List<Vertex> vertices, Bitmap bmp, int level)
+	private void DrawMap(List<Vertex> vertices, Bitmap bmp, int level, bool drawExit)
 	{
 		var g = Graphics.FromImage(bmp);
 		g.FillRectangle(l.backgroundBrush, new Rectangle(new Point(0, 0), bmp.Size));
 		g.DrawString($"Level: {level + 1 }", l.levelFont, l.levelFontBrush, new PointF(10, 10));
-		vertices.ForEach(v => DrawVertex(v, g, bmp));
+		vertices.ForEach(v => DrawVertex(v, g, bmp, drawExit));
 	}
 
-	private void DrawVertex(Vertex v, Graphics g, Bitmap bmp)
+	private void DrawVertex(Vertex v, Graphics g, Bitmap bmp, bool drawExit)
 	{
 		var coord = v.Coord;
 		var vertexRectangle = new Rectangle(
@@ -411,7 +413,14 @@ class GraphPngViz
 			new(l.WallLength, l.WallLength)
 		);
 
-		var floorBrush = v.IsStart ? l.floorStartBrush : (v.IsEnd ? l.floorEndBrush : (v.OnExitPath ? l.exitPathFlootBrush : l.floorBrush));
+		var floorBrush = v switch
+		{
+			{ IsStart: true } => l.floorStartBrush,
+			{ IsEnd: true } => l.floorEndBrush,
+			{ OnExitPath: true } when drawExit == true => l.exitPathFlootBrush,
+			_ => l.floorBrush,
+		};
+
 		g.FillRectangle(floorBrush, vertexRectangle);
 
 		var corners = new Dictionary<int, Point> {
